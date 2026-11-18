@@ -41,7 +41,7 @@ const formatTime = seconds => `${String(Math.floor(seconds / 60)).padStart(2, '0
 export default function App() {
   const [level, setLevel] = useState('Medium');
   const [game, setGame] = useState(() => createPuzzle('Medium'));
-  const [board, setBoard] = useState(() => cloneBoard(createPuzzle('Medium').board));
+  const [board, setBoard] = useState(() => cloneBoard(game.board));
   const [selected, setSelected] = useState([0, 0]);
   const [notes, setNotes] = useState({});
   const [noteMode, setNoteMode] = useState(false);
