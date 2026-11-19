@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Star, Share2, Palette, Settings, Check, Pause, Play, RotateCcw, Eraser, Pencil, Lightbulb, X, Lock, Home, Zap, Trophy } from 'lucide-react';
 
 const LEVELS = [
