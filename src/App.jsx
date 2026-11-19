@@ -18,7 +18,7 @@ export default function App(){
  const fixed=useMemo(()=>game.board.map(r=>r.map(v=>v!==0)),[game]);
  useEffect(()=>{if(paused||won||showLevels)return;const id=setInterval(()=>setSeconds(s=>s+1),1000);return()=>clearInterval(id)},[paused,won,showLevels]);
  const [r,c]=selected||[-1,-1]; const selectedValue=selected?board[r][c]:null; const filled=board.flat().filter(Boolean).length; const remaining=n=>Math.max(0,9-board.flat().filter(v=>v===n).length);
- const startGame=(next=level)=>{const g=createPuzzle(next);setLevel(next);setGame(g);setBoard(clone(g.board));setSelected([0,0]);setNotes({});setMistakes(0);setHints(3);setSeconds(0);setPaused(false);setWon(false);setNoteMode(false);setHistory([]);setScore(0);setShowLevels(false);};
+ const startGame=(next=level)=>{const g=createPuzzle(next);setLevel(next);setGame(g);setBoard(clone(g.board));setSelected(null);setNotes({});setMistakes(0);setHints(3);setSeconds(0);setPaused(false);setWon(false);setNoteMode(false);setHistory([]);setScore(0);setShowLevels(false);};
  const snapshot=()=>setHistory(h=>[...h.slice(-39),{board:clone(board),notes:{...notes},mistakes,score}]);
  const enter=n=>{if(!selected||paused||won||fixed[r][c])return;if(noteMode){const k=r+'-'+c;setNotes(old=>{const s=new Set(old[k]||[]);s.has(n)?s.delete(n):s.add(n);return {...old,[k]:[...s].sort()}});return;}snapshot();const next=clone(board);next[r][c]=n;setBoard(next);setNotes(old=>({...old,[r+'-'+c]:[]}));if(game.solution[r][c]===n)setScore(v=>v+10);else setMistakes(v=>v+1);};
  const erase=()=>{if(!selected||paused||won||fixed[r][c]||!board[r][c]&&!notes[r+'-'+c]?.length)return;snapshot();const next=clone(board);next[r][c]=0;setBoard(next);setNotes(old=>({...old,[r+'-'+c]:[]}));};
