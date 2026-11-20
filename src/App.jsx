@@ -44,7 +44,7 @@ export default function App(){
   <section className="board-section">
    {paused&&<div className="pause-screen"><div className="pause-box"><Pause size={30}/><b>Пауза</b><button className="blue-button" onClick={()=>setPaused(false)}>Продолжить</button></div></div>}
    {hintMode&&<div className="hint-instruction">Нажмите на пустую ячейку, которую хотите открыть!</div>}
-   <div className="sudoku-board">{board.map((row,rr)=>row.map((v,cc)=>{const active=r===rr&&c===cc;const same=matched&&v===matched;return <button key={rr+'-'+cc} onClick={()=>selectCell(rr,cc)} className={['cell',cc%3===2&&cc!==8?'thick-right':'',rr%3===2&&rr!==8?'thick-bottom':'',active?'selected':'',same&&!active?'same-number':'',fixed[rr][cc]?'given':'editable',conflict(rr,cc)?'wrong':'',v&&!fixed[rr][cc]&&v!==game.solution[rr][cc]?'incorrect':''].join(' ')}>{v||<span className="cell-notes">{(notes[rr+'-'+cc]||[]).map(x=><i key={x}>{x}</i>)}</span>}</button>}))}</div>
+   <div className="sudoku-board">{board.map((row,rr)=>row.map((v,cc)=>{const active=r===rr&&c===cc;const same=matched&&v===matched;return <button key={rr+'-'+cc} onClick={()=>selectCell(rr,cc)} className={['cell',cc%3===2&&cc!==8?'thick-right':'',rr%3===2&&rr!==8?'thick-bottom':'',active?'selected':'',same&&!active?'same-number':'',fixed[rr][cc]?'given':'editable',v&&!fixed[rr][cc]&&v!==game.solution[rr][cc]?'incorrect':''].join(' ')}>{v||<span className="cell-notes">{(notes[rr+'-'+cc]||[]).map(x=><i key={x}>{x}</i>)}</span>}</button>}))}</div>
    <div className="board-foot"><span>⚡</span></div>
   </section>
   <section className="action-tools">
