@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Star, Share2, Palette, Settings, Check, Pause, Play, RotateCcw, Eraser, Pencil, Lightbulb, X, Lock, Home, Zap, Trophy, Flame, CalendarDays, Swords, Users, Medal, ChartNoAxesCombined, UserPlus } from 'lucide-react';
+import { ArrowLeft, Star, Share2, Palette, Settings, Check, Pause, Play, RotateCcw, Eraser, Pencil, Lightbulb, X, Lock, Home, Zap, Trophy, Flame, CalendarDays, Swords, Users, Medal, ChartNoAxesCombined, UserPlus, CircleUserRound, Coins, Award } from 'lucide-react';
 
 const LEVELS = [
   { id: 'Beginner', label: 'Начинающий', clues: 45, emoji: '😊', unlock: 0 },
@@ -33,11 +33,11 @@ export default function App(){
  const accuracy=Math.round((filled-mistakes)/Math.max(1,filled)*100);
  const levelUnlocked=l=>!l.unlock||(completed.Hard||0)>=3&&l.id==='Expert'||l.id==='Extreme'&&(completed.Expert||0)>=5;
  if(page==='home') return <main className="home-app">
-  <header className="home-top"><div className="coin-pill"><span>🪙</span><b>0</b></div><div className="streak-pill"><Flame size={19}/><span>Огонёк стриков</span><b>0</b></div><button className="home-settings" aria-label="Настройки" onClick={()=>setShowHomeSettings(true)}><Settings/></button></header>
-  <section className="profile-card"><div className="profile-avatar">👤</div><div className="profile-copy"><h2>Ваш профиль</h2><span>Telegram username</span><b>@username</b></div></section>
-  <section className="home-panel achievement-panel"><div className="panel-icon trophy-icon"><Trophy/></div><div className="panel-content"><div className="panel-heading"><h3>Достижения</h3><span>0 / 30</span></div><div className="achievement-chips"><span>🏅 Новичок</span><span className="locked-chip"><Lock size={12}/> Мастер логики</span></div></div></section>
+  <header className="home-top"><div className="coin-pill"><Coins size={17}/><b>0</b></div><div className="streak-pill"><Flame size={19}/><span>Огонёк стриков</span><b>0</b></div><button className="home-settings" aria-label="Настройки" onClick={()=>setShowHomeSettings(true)}><Settings/></button></header>
+  <section className="profile-card"><div className="profile-avatar"><CircleUserRound size={38}/></div><div className="profile-copy"><h2>Ваш профиль</h2><span>Telegram username</span><b>@username</b></div></section>
+  <section className="home-panel achievement-panel"><div className="panel-icon trophy-icon"><Trophy/></div><div className="panel-content"><div className="panel-heading"><h3>Достижения</h3><span>0 / 30</span></div><div className="achievement-chips"><span><Award size={13}/> Новичок</span><span className="locked-chip"><Lock size={12}/> Мастер логики</span></div></div></section>
   <section className="home-panel statistics-panel"><div className="panel-icon chart-icon"><ChartNoAxesCombined/></div><div className="panel-content"><h3>Статистика</h3><p>Игр: 0 <i/> Побед: 0 (0%)</p><p>Лучшее время: —</p></div></section>
-  <section className="home-panel friends-panel"><div className="friends-heading"><div className="friend-stack"><span>👤</span><span>👤</span><span>👤</span></div><h3>Друзья</h3><small>Онлайн: 0</small></div><div className="friends-empty"><Users/><span>Пока здесь тихо</span><p>Пригласите друзей и соревнуйтесь в Sudoku</p><button onClick={()=>setNavNotice('Приглашения друзьям появятся совсем скоро')}><UserPlus size={16}/> Пригласить</button></div></section>
+  <section className="home-panel friends-panel"><div className="friends-heading"><div className="friend-stack"><span><CircleUserRound/></span><span><CircleUserRound/></span><span><CircleUserRound/></span></div><h3>Друзья</h3><small>Онлайн: 0</small></div><div className="friends-empty"><Users/><span>Пока здесь тихо</span><p>Пригласите друзей и соревнуйтесь в Sudoku</p><button onClick={()=>setNavNotice('Приглашения друзьям появятся совсем скоро')}><UserPlus size={16}/> Пригласить</button></div></section>
   {navNotice&&<div className="home-toast" role="status">{navNotice}<button onClick={()=>setNavNotice('')}><X size={15}/></button></div>}
   <div className="home-bottom"><button className="play-cta" onClick={()=>{setPage('game');setNavNotice('');}}>ИГРАТЬ <span>→</span></button><nav className="bottom-nav">
    <button className="active" onClick={()=>setNavNotice('Вы на главной странице')}><Home/><span>Главная</span></button>
