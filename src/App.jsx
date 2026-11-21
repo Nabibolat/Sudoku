@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Star, Share2, Palette, Settings, Check, Pause, Play, RotateCcw, Eraser, Pencil, Lightbulb, X, Lock, Home, Zap, Trophy } from 'lucide-react';
+import { ArrowLeft, Star, Share2, Palette, Settings, Check, Pause, Play, RotateCcw, Eraser, Pencil, Lightbulb, X, Lock, Home, Zap, Trophy, Flame, CalendarDays, Swords, Users, Medal, ChartNoAxesCombined, UserPlus } from 'lucide-react';
 
 const LEVELS = [
   { id: 'Beginner', label: 'Начинающий', clues: 45, emoji: '😊', unlock: 0 },
@@ -14,6 +14,7 @@ function solutionGrid(){const groups=shuffle([0,1,2]);const rows=groups.flatMap(
 function createPuzzle(level){const solution=solutionGrid();const board=solution.map(r=>[...r]);shuffle(Array.from({length:81},(_,i)=>i)).slice(0,81-level.clues).forEach(i=>board[Math.floor(i/9)][i%9]=0);return {solution,board};}
 const clone=b=>b.map(r=>[...r]); const fmt=s=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
 export default function App(){
+ const [page,setPage]=useState('home'); const [navNotice,setNavNotice]=useState(''); const [showHomeSettings,setShowHomeSettings]=useState(false);
  const [level,setLevel]=useState(LEVELS[2]); const [game,setGame]=useState(()=>createPuzzle(LEVELS[2])); const [board,setBoard]=useState(()=>clone(game.board)); const [selected,setSelected]=useState(null); const [hintMode,setHintMode]=useState(false); const [notes,setNotes]=useState({}); const [noteMode,setNoteMode]=useState(false); const [mistakes,setMistakes]=useState(0); const dailyHintKey=()=>{const d=new Date();return 'sudoku-hints-'+[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');};
  const [hints,setHints]=useState(()=>{try{const saved=localStorage.getItem(dailyHintKey());return saved===null?3:Math.max(0,Math.min(3,Number(saved)||0));}catch{return 3;}}); const [seconds,setSeconds]=useState(0); const [paused,setPaused]=useState(false); const [won,setWon]=useState(false); const [lost,setLost]=useState(false); const [showLevels,setShowLevels]=useState(false); const [history,setHistory]=useState([]); const [score,setScore]=useState(0); const [completed,setCompleted]=useState({Hard:0,Expert:0}); const [best,setBest]=useState({});
  const fixed=useMemo(()=>game.board.map(r=>r.map(v=>v!==0)),[game]);
@@ -31,9 +32,24 @@ export default function App(){
  const conflict=(rr,cc)=>{const v=board[rr][cc];if(!v)return false;return board[rr].some((x,j)=>j!==cc&&x===v)||board.some((row,i)=>i!==rr&&row[cc]===v)||board.some((row,i)=>i!==rr&&Math.floor(i/3)===Math.floor(rr/3)&&row.some((x,j)=>Math.floor(j/3)===Math.floor(cc/3)&&j!==cc&&x===v));};
  const accuracy=Math.round((filled-mistakes)/Math.max(1,filled)*100);
  const levelUnlocked=l=>!l.unlock||(completed.Hard||0)>=3&&l.id==='Expert'||l.id==='Extreme'&&(completed.Expert||0)>=5;
+ if(page==='home') return <main className="home-app">
+  <header className="home-top"><div className="coin-pill"><span>🪙</span><b>0</b></div><div className="streak-pill"><Flame size={19}/><span>Огонёк стриков</span><b>0</b></div><button className="home-settings" aria-label="Настройки" onClick={()=>setShowHomeSettings(true)}><Settings/></button></header>
+  <section className="profile-card"><div className="profile-avatar">👤</div><div className="profile-copy"><h2>Ваш профиль</h2><span>Telegram username</span><b>@username</b></div></section>
+  <section className="home-panel achievement-panel"><div className="panel-icon trophy-icon"><Trophy/></div><div className="panel-content"><div className="panel-heading"><h3>Достижения</h3><span>0 / 30</span></div><div className="achievement-chips"><span>🏅 Новичок</span><span className="locked-chip"><Lock size={12}/> Мастер логики</span></div></div></section>
+  <section className="home-panel statistics-panel"><div className="panel-icon chart-icon"><ChartNoAxesCombined/></div><div className="panel-content"><h3>Статистика</h3><p>Игр: 0 <i/> Побед: 0 (0%)</p><p>Лучшее время: —</p></div></section>
+  <section className="home-panel friends-panel"><div className="friends-heading"><div className="friend-stack"><span>👤</span><span>👤</span><span>👤</span></div><h3>Друзья</h3><small>Онлайн: 0</small></div><div className="friends-empty"><Users/><span>Пока здесь тихо</span><p>Пригласите друзей и соревнуйтесь в Sudoku</p><button onClick={()=>setNavNotice('Приглашения друзьям появятся совсем скоро')}><UserPlus size={16}/> Пригласить</button></div></section>
+  {navNotice&&<div className="home-toast" role="status">{navNotice}<button onClick={()=>setNavNotice('')}><X size={15}/></button></div>}
+  <div className="home-bottom"><button className="play-cta" onClick={()=>{setPage('game');setNavNotice('');}}>ИГРАТЬ <span>→</span></button><nav className="bottom-nav">
+   <button className="active" onClick={()=>setNavNotice('Вы на главной странице')}><Home/><span>Главная</span></button>
+   <button onClick={()=>setNavNotice('Судоку дня скоро появится')}><CalendarDays/><span>Судоку дня</span></button>
+   <button onClick={()=>setNavNotice('Режим «Батл» скоро появится')}><Swords/><span>Батл</span></button>
+   <button onClick={()=>setNavNotice('Раздел друзей скоро появится')}><Users/><span>Друзья</span></button>
+  </nav></div>
+  {showHomeSettings&&<div className="home-modal-backdrop" onClick={()=>setShowHomeSettings(false)}><section className="home-settings-modal" onClick={e=>e.stopPropagation()}><button className="modal-x" onClick={()=>setShowHomeSettings(false)}><X/></button><Settings/><h3>Настройки</h3><p>Настройки приложения скоро появятся.</p><button className="modal-ok" onClick={()=>setShowHomeSettings(false)}>Понятно</button></section></div>}
+ </main>;
  return <main className="game-app">
   <header className="topbar">
-   <button className="top-icon" aria-label="Назад"><ArrowLeft/></button>
+   <button className="top-icon" aria-label="На главную" onClick={()=>setPage("home")}><ArrowLeft/></button>
    <div className="top-actions"><button className="top-icon" aria-label="Избранное"><Star/></button><button className="top-icon" aria-label="Поделиться"><Share2/></button><button className="top-icon" aria-label="Оформление"><Palette/></button><button className="top-icon" aria-label="Настройки"><Settings/></button></div>
   </header>
   <section className="game-status">
