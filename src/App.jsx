@@ -13,14 +13,21 @@ const shuffle = a => { const b=[...a]; for(let i=b.length-1;i>0;i--){const j=Mat
 function solutionGrid(){const groups=shuffle([0,1,2]);const rows=groups.flatMap(g=>shuffle([0,1,2]).map(n=>g*3+n));const cols=shuffle([0,1,2]).flatMap(g=>shuffle([0,1,2]).map(n=>g*3+n));const nums=shuffle([1,2,3,4,5,6,7,8,9]);return rows.map(r=>cols.map(c=>nums[(r*3+Math.floor(r/3)+c)%9]));}
 function createPuzzle(level){const solution=solutionGrid();const board=solution.map(r=>[...r]);shuffle(Array.from({length:81},(_,i)=>i)).slice(0,81-level.clues).forEach(i=>board[Math.floor(i/9)][i%9]=0);return {solution,board};}
 const clone=b=>b.map(r=>[...r]); const fmt=s=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+function seededRandom(seed){let x=seed>>>0;return()=>{x=(x+0x6D2B79F5)>>>0;let t=x;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};}
+function seededShuffle(a,random){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+function dailyPuzzleFor(date){const seed=Number(date.replaceAll('-',''))||1;const random=seededRandom(seed);const groups=seededShuffle([0,1,2],random);const rows=groups.flatMap(g=>seededShuffle([0,1,2],random).map(n=>g*3+n));const cols=seededShuffle([0,1,2],random).flatMap(g=>seededShuffle([0,1,2],random).map(n=>g*3+n));const nums=seededShuffle([1,2,3,4,5,6,7,8,9],random);const solution=rows.map(r=>cols.map(c=>nums[(r*3+Math.floor(r/3)+c)%9]));const board=clone(solution);seededShuffle(Array.from({length:81},(_,i)=>i),random).slice(0,47).forEach(i=>board[Math.floor(i/9)][i%9]=0);return{solution,board};}
+const localDateKey=(date=new Date())=>[date.getFullYear(),String(date.getMonth()+1).padStart(2,'0'),String(date.getDate()).padStart(2,'0')].join('-');
+const readDailyCompletions=()=>{try{return JSON.parse(localStorage.getItem('sudoku-daily-completed')||'{}')}catch{return{}}};
 export default function App(){
  const [page,setPage]=useState('home'); const [navNotice,setNavNotice]=useState(''); const [showHomeSettings,setShowHomeSettings]=useState(false);
+ const [dailyDate,setDailyDate]=useState(null); const [dailyCompleted,setDailyCompleted]=useState(readDailyCompletions); const [calendarOffset,setCalendarOffset]=useState(0);
  const [level,setLevel]=useState(LEVELS[2]); const [game,setGame]=useState(()=>createPuzzle(LEVELS[2])); const [board,setBoard]=useState(()=>clone(game.board)); const [selected,setSelected]=useState(null); const [hintMode,setHintMode]=useState(false); const [notes,setNotes]=useState({}); const [noteMode,setNoteMode]=useState(false); const [mistakes,setMistakes]=useState(0); const dailyHintKey=()=>{const d=new Date();return 'sudoku-hints-'+[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');};
  const [hints,setHints]=useState(()=>{try{const saved=localStorage.getItem(dailyHintKey());return saved===null?3:Math.max(0,Math.min(3,Number(saved)||0));}catch{return 3;}}); const [seconds,setSeconds]=useState(0); const [paused,setPaused]=useState(false); const [won,setWon]=useState(false); const [lost,setLost]=useState(false); const [showLevels,setShowLevels]=useState(false); const [history,setHistory]=useState([]); const [score,setScore]=useState(0); const [completed,setCompleted]=useState({Hard:0,Expert:0}); const [best,setBest]=useState({});
  const fixed=useMemo(()=>game.board.map(r=>r.map(v=>v!==0)),[game]);
  useEffect(()=>{if(page!=='game'||paused||won||lost||showLevels)return;const id=setInterval(()=>setSeconds(s=>s+1),1000);return()=>clearInterval(id)},[page,paused,won,lost,showLevels]);
  const [r,c]=selected||[-1,-1]; const selectedValue=selected?board[r][c]:null; const filled=board.flat().filter(Boolean).length; const remaining=n=>Math.max(0,9-board.flat().filter(v=>v===n).length);
- const startGame=(next=level)=>{const g=createPuzzle(next);setLevel(next);setGame(g);setBoard(clone(g.board));setSelected(null);setHintMode(false);setNotes({});setMistakes(0);setSeconds(0);setPaused(false);setWon(false);setLost(false);setNoteMode(false);setHistory([]);setScore(0);setShowLevels(false);};
+ const startGame=(next=level)=>{setDailyDate(null);const g=createPuzzle(next);setLevel(next);setGame(g);setBoard(clone(g.board));setSelected(null);setHintMode(false);setNotes({});setMistakes(0);setSeconds(0);setPaused(false);setWon(false);setLost(false);setNoteMode(false);setHistory([]);setScore(0);setShowLevels(false);};
+ const startDailyGame=(date)=>{const g=dailyPuzzleFor(date);let saved=null;try{saved=JSON.parse(localStorage.getItem('sudoku-daily-progress-'+date)||'null')}catch{}setDailyDate(date);setLevel(LEVELS[2]);setGame(g);setBoard(saved?.board?clone(saved.board):clone(g.board));setSelected(null);setHintMode(false);setNotes(saved?.notes||{});setMistakes(saved?.mistakes||0);setSeconds(saved?.seconds||0);setPaused(false);setWon(!!dailyCompleted[date]);setLost(false);setNoteMode(false);setHistory([]);setScore(saved?.score||0);setShowLevels(false);setPage('game');};
  const snapshot=()=>setHistory(h=>[...h.slice(-39),{board:clone(board),notes:{...notes},mistakes,score}]);
  const enter=n=>{if(!selected||paused||won||lost||fixed[r][c])return;if(noteMode){const k=r+'-'+c;setNotes(old=>{const s=new Set(old[k]||[]);s.has(n)?s.delete(n):s.add(n);return {...old,[k]:[...s].sort()}});return;}snapshot();const next=clone(board);next[r][c]=n;setBoard(next);setNotes(old=>({...old,[r+'-'+c]:[]}));if(game.solution[r][c]===n)setScore(v=>v+10);else{const nextMistakes=mistakes+1;setMistakes(nextMistakes);if(nextMistakes>=3){setLost(true);setHintMode(false);}}};
  const erase=()=>{if(!selected||paused||won||lost||fixed[r][c]||!board[r][c]&&!notes[r+'-'+c]?.length)return;snapshot();const next=clone(board);next[r][c]=0;setBoard(next);setNotes(old=>({...old,[r+'-'+c]:[]}));};
@@ -31,7 +38,20 @@ export default function App(){
  const matched=selectedValue||null;
  const conflict=(rr,cc)=>{const v=board[rr][cc];if(!v)return false;return board[rr].some((x,j)=>j!==cc&&x===v)||board.some((row,i)=>i!==rr&&row[cc]===v)||board.some((row,i)=>i!==rr&&Math.floor(i/3)===Math.floor(rr/3)&&row.some((x,j)=>Math.floor(j/3)===Math.floor(cc/3)&&j!==cc&&x===v));};
  const accuracy=Math.round((filled-mistakes)/Math.max(1,filled)*100);
+ useEffect(()=>{if(!dailyDate||page!=='game'||won||lost)return;try{localStorage.setItem('sudoku-daily-progress-'+dailyDate,JSON.stringify({board,notes,mistakes,seconds,score}));}catch{}},[dailyDate,page,board,notes,mistakes,seconds,score,won,lost]);
+ useEffect(()=>{if(!dailyDate||!won)return;setDailyCompleted(old=>{const next={...old,[dailyDate]:true};try{localStorage.setItem('sudoku-daily-completed',JSON.stringify(next));localStorage.removeItem('sudoku-daily-progress-'+dailyDate);}catch{}return next;});},[dailyDate,won]);
  const levelUnlocked=l=>!l.unlock||(completed.Hard||0)>=3&&l.id==='Expert'||l.id==='Extreme'&&(completed.Expert||0)>=5;
+ if(page==='daily') {const now=new Date();const month=new Date(now.getFullYear(),now.getMonth()+calendarOffset,1);const monthName=month.toLocaleDateString('ru-RU',{month:'long',year:'numeric'});const firstDay=(month.getDay()+6)%7;const days=new Date(month.getFullYear(),month.getMonth()+1,0).getDate();const today=localDateKey();const dateForDay=d=>localDateKey(new Date(month.getFullYear(),month.getMonth(),d));return <main className="home-app daily-app">
+  <header className="daily-header"><button className="daily-back" onClick={()=>setPage('home')}><ArrowLeft/></button><div><h1>Судоку дня</h1><p>Каждый день — новая головоломка</p></div><CalendarDays/></header>
+  <section className="daily-summary"><div className="daily-summary-icon"><CalendarDays/></div><div><b>{Object.keys(dailyCompleted).length} дней решено</b><span>Возвращайтесь к пропущенным дням в любое время</span></div></section>
+  <section className="calendar-card"><div className="calendar-title"><button aria-label="Предыдущий месяц" onClick={()=>setCalendarOffset(v=>v-1)}><ArrowLeft/></button><h2>{monthName}</h2><button aria-label="Следующий месяц" disabled={calendarOffset>=0} onClick={()=>setCalendarOffset(v=>Math.min(0,v+1))}><ArrowLeft className="calendar-next"/></button></div>
+   <div className="calendar-grid calendar-weekdays">{['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].map(d=><span key={d}>{d}</span>)}</div>
+   <div className="calendar-grid">{Array.from({length:firstDay},(_,i)=><span key={'blank'+i}/>)}{Array.from({length:days},(_,i)=>{const d=i+1,key=dateForDay(d),future=key>today,done=!!dailyCompleted[key],isToday=key===today;return <button key={key} disabled={future} className={['calendar-day',done?'done':'',isToday?'today':'',future?'future':''].join(' ')} onClick={()=>startDailyGame(key)}>{done?<Check size={19}/>:d}{isToday&&!done&&<i/>}</button>})}</div>
+   <div className="calendar-legend"><span><i className="legend-done"/> Решено</span><span><i className="legend-today"/> Сегодня</span><span><i className="legend-locked"/> Ещё не наступил</span></div>
+  </section>
+  <section className="daily-info"><div className="daily-info-top"><span>Ежедневное испытание</span><badge>СРЕДНИЙ</badge></div><h3>Тренируйте логику каждый день</h3><p>Сегодняшняя головоломка обновляется ежедневно. Пропущенные дни всегда можно пройти позже.</p><button onClick={()=>startDailyGame(today)}>{dailyCompleted[today]?'Посмотреть сегодняшний день':'Играть сегодня'} <span>→</span></button></section>
+  <div className="daily-bottom"><nav className="bottom-nav"><button onClick={()=>setPage('home')}><Home/><span>Главная</span></button><button className="active"><CalendarDays/><span>Судоку дня</span></button><button onClick={()=>setNavNotice('Режим «Батл» скоро появится')}><Swords/><span>Батл</span></button><button onClick={()=>setNavNotice('Раздел друзей скоро появится')}><Users/><span>Друзья</span></button></nav></div>
+ </main>}
  if(page==='home') return <main className="home-app">
   <header className="home-top"><div className="coin-pill"><Coins size={17}/><b>0</b></div><div className="streak-pill"><Flame size={19}/><span>Огонёк стриков</span><b>0</b></div><button className="home-settings" aria-label="Настройки" onClick={()=>setShowHomeSettings(true)}><Settings/></button></header>
   <section className="profile-card"><div className="profile-avatar"><CircleUserRound size={38}/></div><div className="profile-copy"><h2>Ваш профиль</h2><span>Telegram username</span><b>@username</b></div></section>
@@ -41,7 +61,7 @@ export default function App(){
   {navNotice&&<div className="home-toast" role="status">{navNotice}<button onClick={()=>setNavNotice('')}><X size={15}/></button></div>}
   <div className="home-bottom"><button className="play-cta" onClick={()=>{setPage('game');setNavNotice('');}}>ИГРАТЬ <span>→</span></button><nav className="bottom-nav">
    <button className="active" onClick={()=>setNavNotice('Вы на главной странице')}><Home/><span>Главная</span></button>
-   <button onClick={()=>setNavNotice('Судоку дня скоро появится')}><CalendarDays/><span>Судоку дня</span></button>
+   <button onClick={()=>{setPage('daily');setNavNotice('');}}><CalendarDays/><span>Судоку дня</span></button>
    <button onClick={()=>setNavNotice('Режим «Батл» скоро появится')}><Swords/><span>Батл</span></button>
    <button onClick={()=>setNavNotice('Раздел друзей скоро появится')}><Users/><span>Друзья</span></button>
   </nav></div>
@@ -49,7 +69,7 @@ export default function App(){
  </main>;
  return <main className="game-app">
   <header className="topbar">
-   <button className="top-icon" aria-label="На главную" onClick={()=>setPage("home")}><ArrowLeft/></button>
+   <button className="top-icon" aria-label="Назад" onClick={()=>setPage(dailyDate?"daily":"home")}><ArrowLeft/></button>
    <div className="top-actions"><button className="top-icon" aria-label="Избранное"><Star/></button><button className="top-icon" aria-label="Поделиться"><Share2/></button><button className="top-icon" aria-label="Оформление"><Palette/></button><button className="top-icon" aria-label="Настройки"><Settings/></button></div>
   </header>
   <section className="game-status">
