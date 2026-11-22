@@ -39,3 +39,9 @@
 @media(max-height:740px){.daily-header{height:78px}.daily-summary{padding:12px 3px}.calendar-card{padding:12px 10px}.calendar-grid{gap:4px}.daily-info{margin-top:10px;padding:12px}}
 
 .daily-victory-actions{width:min(100% - 36px,360px);display:flex;flex-direction:column;gap:10px;position:relative;z-index:2;margin:0 auto 24px}.daily-victory-actions .new-game-button{width:100%;margin:0}.daily-home-button{height:48px;width:100%;border:1px solid #454751;border-radius:13px;background:#202127;color:#e7e8ed;font-size:14px;font-weight:600}.victory-bottom button{border:0;background:transparent;color:inherit;font:inherit;cursor:pointer;padding:8px}
+
+
+.daily-victory-actions{width:min(100% - 36px,360px);display:flex;flex-direction:column;gap:10px;position:relative;z-index:2;margin:0 auto 24px}
+.daily-victory-actions .new-game-button{width:100%;margin:0}
+.daily-home-button{height:48px;width:100%;border:1px solid #454751;border-radius:13px;background:#202127;color:#e7e8ed;font-size:14px;font-weight:600;cursor:pointer}
+.victory-bottom button{border:0;background:transparent;color:inherit;font:inherit;cursor:pointer;padding:8px}
