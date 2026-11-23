@@ -45,3 +45,6 @@
 .daily-victory-actions .new-game-button{width:100%;margin:0}
 .daily-home-button{height:48px;width:100%;border:1px solid #454751;border-radius:13px;background:#202127;color:#e7e8ed;font-size:14px;font-weight:600;cursor:pointer}
 .victory-bottom button{border:0;background:transparent;color:inherit;font:inherit;cursor:pointer;padding:8px}
+
+
+.streak-pill{gap:6px;padding:0 10px}
