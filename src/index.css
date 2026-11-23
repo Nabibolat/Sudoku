@@ -48,3 +48,60 @@
 
 
 .streak-pill{gap:6px;padding:0 10px}
+
+
+/* Settings panel */
+.home-settings-modal{max-height:min(88dvh,620px);overflow:auto;text-align:left;padding:25px 20px 20px}
+.settings-title{display:flex;align-items:center;gap:13px;margin:0 0 22px}
+.settings-title>svg{width:30px;height:30px;flex:none;color:#8eabff}
+.settings-title h3{margin:0 0 3px;font-size:21px}
+.settings-title p{margin:0;font-size:12px;color:#898b94}
+.settings-group{margin:0 0 19px}
+.settings-label{display:block;margin:0 0 9px;color:#bfc1c9;font-size:13px;font-weight:600}
+.settings-options{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.settings-options button{height:42px;border:1px solid #383a41;border-radius:10px;background:#191a1e;color:#bfc1c9;font-size:14px;font-weight:500}
+.settings-options button.chosen{border-color:#5279ce;background:#252e43;color:#a9c0ff}
+.settings-group small{display:block;margin-top:8px;color:#777b85;font-size:11px}
+.home-settings-modal .modal-ok{width:100%;height:45px;margin-top:2px}
+.home-app[data-theme="light"]{background:#f3f5f9;color:#20232b}
+.home-app[data-theme="light"] .home-top,.home-app[data-theme="light"] .home-bottom{background:#f3f5f9}
+.home-app[data-theme="light"] .coin-pill,.home-app[data-theme="light"] .streak-pill,.home-app[data-theme="light"] .home-settings{border-color:#dce1ea;color:#555d6d}
+.home-app[data-theme="light"] .home-settings svg{color:#555d6d}
+.home-app[data-theme="light"] .profile-card,.home-app[data-theme="light"] .home-panel,.home-app[data-theme="light"] .calendar-card,.home-app[data-theme="light"] .daily-info{background:#fff;border-color:#e1e5ec}
+.home-app[data-theme="light"] .profile-avatar,.home-app[data-theme="light"] .panel-icon,.home-app[data-theme="light"] .friend-stack span,.home-app[data-theme="light"] .daily-summary-icon{background:#edf1f8;border-color:#dce2ed}
+.home-app[data-theme="light"] .profile-copy h2,.home-app[data-theme="light"] .panel-content h3,.home-app[data-theme="light"] .friends-heading h3,.home-app[data-theme="light"] .daily-header h1,.home-app[data-theme="light"] .daily-info h3{color:#20232b}
+.home-app[data-theme="light"] .profile-copy span,.home-app[data-theme="light"] .panel-content p,.home-app[data-theme="light"] .friends-heading small,.home-app[data-theme="light"] .friends-empty p,.home-app[data-theme="light"] .daily-header p,.home-app[data-theme="light"] .daily-summary span,.home-app[data-theme="light"] .daily-info p,.home-app[data-theme="light"] .daily-info-top{color:#707887}
+.home-app[data-theme="light"] .friends-empty,.home-app[data-theme="light"] .daily-summary b{color:#343a46}
+.home-app[data-theme="light"] .bottom-nav{border-color:#dce1e9}
+.home-app[data-theme="light"] .bottom-nav button{color:#727b8a}
+.home-app[data-theme="light"] .bottom-nav button.active{background:#e6edfb;color:#315eb5}
+.home-app[data-theme="light"] .calendar-day{background:#f0f2f6;color:#343a46}
+.home-app[data-theme="light"] .calendar-day.today{background:#e6edfb;color:#315eb5}
+.home-app[data-theme="light"] .calendar-day.done{background:#e4f4eb;color:#24774a}
+.home-app[data-theme="light"] .calendar-day.future{background:transparent;color:#aeb4bf}
+.home-app[data-theme="light"] .calendar-title button,.home-app[data-theme="light"] .daily-back{background:#fff;border-color:#dce1e9;color:#4d5666}
+.home-app[data-theme="light"] .calendar-title h2{color:#252a34}
+.home-app[data-theme="light"] .calendar-weekdays span,.home-app[data-theme="light"] .calendar-legend{color:#7b8391}
+.home-app[data-theme="light"] .daily-difficulty{background:#e7f5ed;border-color:#c5e7d2;color:#24774a}
+.home-app[data-theme="light"] .home-toast{background:#fff;color:#303744;border-color:#dce1e9}
+.home-app[data-theme="light"] .home-settings-modal{background:#fff;color:#20232b;border-color:#dce1e9}
+.home-app[data-theme="light"] .home-settings-modal p,.home-app[data-theme="light"] .settings-title p{color:#737b89}
+.home-app[data-theme="light"] .settings-label{color:#4c5564}
+.home-app[data-theme="light"] .settings-options button{background:#f4f6f9;border-color:#dce1e9;color:#4e5868}
+.home-app[data-theme="light"] .settings-options button.chosen{background:#e6edfb;border-color:#8ba7e5;color:#315eb5}
+.home-app[data-theme="light"] .modal-x{color:#596273}
+.game-app[data-theme="light"]{background:#f3f5f9;color:#20232b}
+.game-app[data-theme="light"] .topbar,.game-app[data-theme="light"] .game-status,.game-app[data-theme="light"] .action-tools,.game-app[data-theme="light"] .change-level{color:#303744}
+.game-app[data-theme="light"] .top-icon,.game-app[data-theme="light"] .pause-button{color:#4d5a70}
+.game-app[data-theme="light"] .cell{background:#fff;color:#252b36;border-color:#cbd2de}
+.game-app[data-theme="light"] .cell.given{background:#edf0f5;color:#242a35}
+.game-app[data-theme="light"] .cell.selected{background:#dce8ff;color:#1f55b5}
+.game-app[data-theme="light"] .cell.same-number{background:#edf3ff}
+.game-app[data-theme="light"] .number-pad button,.game-app[data-theme="light"] .level-row,.game-app[data-theme="light"] .extra-modes button{background:#fff;color:#315eb5;border:1px solid #e0e5ed}
+.game-app[data-theme="light"] .number-pad button small,.game-app[data-theme="light"] .level-name,.game-app[data-theme="light"] .level-sheet h2{color:#303744}
+.game-app[data-theme="light"] .change-level{background:#fff;border-color:#dce1e9}
+.game-app[data-theme="light"] .level-sheet{background:#f7f8fb;color:#20232b}
+.game-app[data-theme="light"] .weekly-rate,.game-app[data-theme="light"] .level-name em{color:#737b89}
+.game-app[data-theme="light"] .loss-card{background:#fff;color:#20232b}
+.game-app[data-theme="light"] .loss-card h1{color:#20232b}
+.game-app[data-theme="light"] .loss-card p,.game-app[data-theme="light"] .loss-count{color:#737b89}
