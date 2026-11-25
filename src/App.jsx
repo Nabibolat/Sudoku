@@ -32,10 +32,11 @@ export default function App(){
  const snapshot=()=>setHistory(h=>[...h.slice(-39),{board:clone(board),notes:{...notes},mistakes,score}]);
  const enter=n=>{if(!selected||paused||won||lost||fixed[r][c])return;if(noteMode){const k=r+'-'+c;setNotes(old=>{const s=new Set(old[k]||[]);s.has(n)?s.delete(n):s.add(n);return {...old,[k]:[...s].sort()}});return;}snapshot();const next=clone(board);next[r][c]=n;setBoard(next);setNotes(old=>({...old,[r+'-'+c]:[]}));if(game.solution[r][c]===n){playSound('correct');setScore(v=>v+10);}else{playSound('wrong');const nextMistakes=mistakes+1;setMistakes(nextMistakes);if(nextMistakes>=3){setLost(true);setHintMode(false);}}};
  const erase=()=>{if(!selected||paused||won||lost||fixed[r][c]||!board[r][c]&&!notes[r+'-'+c]?.length)return;playSound('erase');snapshot();const next=clone(board);next[r][c]=0;setBoard(next);setNotes(old=>({...old,[r+'-'+c]:[]}));};
- const undo=()=>{if(lost||won)return;const last=history.at(-1);if(!last)return;playSound('tap');setBoard(last.board);setNotes(last.notes);setMistakes(last.mistakes);setScore(last.score);setHistory(h=>h.slice(0,-1));};
+ const undo=()=>{if(paused||lost||won)return;const last=history.at(-1);if(!last)return;playSound('tap');setBoard(last.board);setNotes(last.notes);setMistakes(last.mistakes);setScore(last.score);setHistory(h=>h.slice(0,-1));};
  const hint=()=>{if(!hints||paused||won||lost)return;playSound('tap');setHintMode(v=>!v);};
  const selectCell=(rr,cc)=>{if(lost||won||paused)return;playSound('select');if(hintMode){if(board[rr][cc]!==0||fixed[rr][cc])return;snapshot();const next=clone(board);next[rr][cc]=game.solution[rr][cc];setBoard(next);setSelected([rr,cc]);setHintMode(false);setHints(v=>{const left=Math.max(0,v-1);try{localStorage.setItem(dailyHintKey(),String(left));}catch{}return left;});setScore(v=>Math.max(0,v-30));setNotes(old=>({...old,[rr+'-'+cc]:[]}));return;}setSelected([rr,cc]);};
  useEffect(()=>{if(board.every((row,i)=>row.every((v,j)=>v===game.solution[i][j]))&&!won&&!lost){playSound('win');setWon(true);setBest(old=>({...old,[level.id]:!old[level.id]||seconds<old[level.id]?seconds:old[level.id]}));setCompleted(old=>({...old,[level.id]:(old[level.id]||0)+1}));}},[board,game,won,level,seconds]);
+ useEffect(()=>{if(lost)playSound('loss');},[lost]);
  const matched=selectedValue||null;
  const conflict=(rr,cc)=>{const v=board[rr][cc];if(!v)return false;return board[rr].some((x,j)=>j!==cc&&x===v)||board.some((row,i)=>i!==rr&&row[cc]===v)||board.some((row,i)=>i!==rr&&Math.floor(i/3)===Math.floor(rr/3)&&row.some((x,j)=>Math.floor(j/3)===Math.floor(cc/3)&&j!==cc&&x===v));};
  const accuracy=Math.round((filled-mistakes)/Math.max(1,filled)*100);
@@ -85,7 +86,7 @@ export default function App(){
    <div className="board-foot"><span>⚡</span></div>
   </section>
   <section className="action-tools">
-   <button onClick={undo} disabled={!history.length||won||lost}><RotateCcw/><span>{t('Отменить','Undo')}</span></button>
+   <button onClick={undo} disabled={!history.length||paused||won||lost}><RotateCcw/><span>{t('Отменить','Undo')}</span></button>
    <button onClick={erase}><Eraser/><span>{t('Стирать','Erase')}</span></button>
    <button className={noteMode?'tool-active':''} onClick={()=>setNoteMode(v=>!v)}><Pencil/><span>{t('Карандаш','Notes')}</span></button>
    <button onClick={hint} disabled={!hints||paused||won||lost} className={hintMode?"tool-active":""}><span className="hint-art"><Lightbulb/><i>{hints}</i></span><span>{t('Умная подсказка','Smart hint')}</span></button>
