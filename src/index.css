@@ -116,3 +116,43 @@ html.telegram-mini-app,html.telegram-mini-app body,html.telegram-mini-app #root{
 .telegram-mini-app .daily-app{height:100dvh;min-height:0;padding-top:var(--tg-content-safe-area-inset-top,var(--tg-safe-area-inset-top,env(safe-area-inset-top,0px)));padding-bottom:max(12px,var(--tg-content-safe-area-inset-bottom,var(--tg-safe-area-inset-bottom,env(safe-area-inset-bottom,0px))))}
 .telegram-mini-app .game-app{min-height:100dvh;padding-bottom:max(28px,var(--tg-content-safe-area-inset-bottom,var(--tg-safe-area-inset-bottom,env(safe-area-inset-bottom,0px))))}
 .telegram-mini-app .topbar{padding-top:calc(82px + var(--tg-content-safe-area-inset-top,var(--tg-safe-area-inset-top,env(safe-area-inset-top,0px))))}
+
+/* Telegram game layout: reclaim top space and keep all controls reachable */
+.telegram-mini-app .game-app{
+  height:100dvh;
+  min-height:0;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  padding-bottom:max(8px,var(--tg-content-safe-area-inset-bottom,var(--tg-safe-area-inset-bottom,env(safe-area-inset-bottom,0px))));
+  scrollbar-width:none;
+}
+.telegram-mini-app .game-app::-webkit-scrollbar{display:none}
+.telegram-mini-app .topbar{
+  height:58px;
+  flex:none;
+  padding:calc(6px + var(--tg-content-safe-area-inset-top,var(--tg-safe-area-inset-top,env(safe-area-inset-top,0px)))) 8px 0;
+}
+.telegram-mini-app .top-icon{width:36px;height:36px}
+.telegram-mini-app .top-icon svg{width:25px;height:25px}
+.telegram-mini-app .top-actions{gap:2px}
+.telegram-mini-app .game-status{height:58px;font-size:14px}
+.telegram-mini-app .status-center{gap:3px}
+.telegram-mini-app .status-center strong{font-size:18px}
+.telegram-mini-app .status-center span{font-size:13px}
+.telegram-mini-app .pause-button{width:34px;height:34px}
+.telegram-mini-app .board-foot{height:12px}
+.telegram-mini-app .action-tools{margin:6px 0 8px;gap:4px}
+.telegram-mini-app .action-tools button{gap:3px;padding:2px 0;font-size:11px}
+.telegram-mini-app .action-tools button svg,.telegram-mini-app .hint-art svg{width:29px;height:29px}
+.telegram-mini-app .hint-art i{right:-6px;top:-5px;font-size:10px;padding:1px 5px}
+.telegram-mini-app .number-pad{gap:3px;margin:0 2px}
+.telegram-mini-app .number-pad button{height:clamp(46px,7dvh,58px);border-radius:8px;gap:2px}
+.telegram-mini-app .number-pad button strong{font-size:clamp(20px,5vw,27px)}
+.telegram-mini-app .number-pad button small{font-size:10px}
+.telegram-mini-app .change-level{margin:8px auto 0;padding:8px 12px}
+@media(max-height:700px){
+  .telegram-mini-app .topbar{height:52px}
+  .telegram-mini-app .game-status{height:52px}
+  .telegram-mini-app .number-pad button{height:46px}
+  .telegram-mini-app .action-tools{margin:4px 0 6px}
+}
