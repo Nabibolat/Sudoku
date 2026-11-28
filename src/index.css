@@ -107,3 +107,12 @@
 .game-app[data-theme="light"] .loss-card p,.game-app[data-theme="light"] .loss-count{color:#737b89}
 
 .profile-avatar img{width:100%;height:100%;display:block;object-fit:cover;border-radius:50%}
+
+
+/* Telegram Mini App: safe areas and viewport sizing */
+html.telegram-mini-app,html.telegram-mini-app body,html.telegram-mini-app #root{height:100%;min-height:0;overflow:hidden}
+.telegram-mini-app .home-app{height:100dvh;min-height:0;padding-top:var(--tg-content-safe-area-inset-top,var(--tg-safe-area-inset-top,env(safe-area-inset-top,0px)));padding-bottom:0}
+.telegram-mini-app .home-bottom{padding-bottom:max(10px,var(--tg-content-safe-area-inset-bottom,var(--tg-safe-area-inset-bottom,env(safe-area-inset-bottom,0px))))}
+.telegram-mini-app .daily-app{height:100dvh;min-height:0;padding-top:var(--tg-content-safe-area-inset-top,var(--tg-safe-area-inset-top,env(safe-area-inset-top,0px)));padding-bottom:max(12px,var(--tg-content-safe-area-inset-bottom,var(--tg-safe-area-inset-bottom,env(safe-area-inset-bottom,0px))))}
+.telegram-mini-app .game-app{min-height:100dvh;padding-top:var(--tg-content-safe-area-inset-top,var(--tg-safe-area-inset-top,env(safe-area-inset-top,0px)));padding-bottom:max(28px,var(--tg-content-safe-area-inset-bottom,var(--tg-safe-area-inset-bottom,env(safe-area-inset-bottom,0px))))}
+.telegram-mini-app .topbar{padding-top:calc(82px + var(--tg-content-safe-area-inset-top,var(--tg-safe-area-inset-top,env(safe-area-inset-top,0px))))}
