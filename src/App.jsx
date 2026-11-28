@@ -32,6 +32,8 @@ export default function App(){
  useEffect(()=>{if(page!=='game'||paused||won||lost||showLevels)return;const id=setInterval(()=>setSeconds(s=>s+1),1000);return()=>clearInterval(id)},[page,paused,won,lost,showLevels]);
  const [r,c]=selected||[-1,-1]; const selectedValue=selected?board[r][c]:null; const filled=board.flat().filter(Boolean).length; const remaining=n=>Math.max(0,9-board.flat().filter(v=>v===n).length);
  const closeLevelPicker=()=>{setShowLevels(false);if(levelPickerFromHome){setLevelPickerFromHome(false);setPage('home');}};
+ const handleBack=()=>{if(showLevels){closeLevelPicker();return;}if(page==='game'){setPage(dailyDate?'daily':'home');return;}if(page==='daily'){setPage('home');return;}};
+ useEffect(()=>{const webApp=window.Telegram?.WebApp;const backButton=webApp?.BackButton;if(!backButton)return;const visible=page!=='home'||showLevels;if(visible){backButton.show();backButton.onClick(handleBack);}else{backButton.hide();}return()=>{backButton.offClick(handleBack);};},[page,showLevels,levelPickerFromHome,dailyDate]);
  const startGame=(next=level)=>{setLevelPickerFromHome(false);setDailyDate(null);const g=createPuzzle(next);setLevel(next);setGame(g);setBoard(clone(g.board));setSelected(null);setHintMode(false);setNotes({});setMistakes(0);setSeconds(0);setPaused(false);setWon(false);setLost(false);setNoteMode(false);setScore(0);setShowLevels(false);};
  const startDailyGame=(date)=>{const g=dailyPuzzleFor(date);let saved=null;try{saved=JSON.parse(localStorage.getItem('sudoku-daily-progress-'+date)||'null')}catch{}setDailyDate(date);setLevel(LEVELS[2]);setGame(g);setBoard(saved?.board?clone(saved.board):clone(g.board));setSelected(null);setHintMode(false);setNotes(saved?.notes||{});setMistakes(saved?.mistakes||0);setSeconds(saved?.seconds||0);setPaused(false);setWon(!!dailyCompleted[date]);setLost(false);setNoteMode(false);setScore(saved?.score||0);setShowLevels(false);setPage('game');};
  const enter=n=>{if(!selected||paused||won||lost||fixed[r][c])return;if(noteMode){const k=r+'-'+c;setNotes(old=>{const s=new Set(old[k]||[]);s.has(n)?s.delete(n):s.add(n);return {...old,[k]:[...s].sort()}});return;}const next=clone(board);next[r][c]=n;setBoard(next);setNotes(old=>({...old,[r+'-'+c]:[]}));if(game.solution[r][c]===n){playSound('correct');setScore(v=>v+10);}else{playSound('wrong');const nextMistakes=mistakes+1;setMistakes(nextMistakes);if(nextMistakes>=3){setLost(true);setHintMode(false);}}};
@@ -75,7 +77,7 @@ export default function App(){
  </main>;
  return <main onClickCapture={handleUiSound} className={`game-app ${theme}`} data-theme={theme}>
   <header className="topbar">
-   <button className="top-icon" aria-label="Назад" onClick={()=>setPage(dailyDate?"daily":"home")}><ArrowLeft/></button>
+   <button className="top-icon" aria-label="Назад" onClick={handleBack}><ArrowLeft/></button>
    <div className="top-actions"><button className="top-icon" aria-label="Избранное"><Star/></button><button className="top-icon" aria-label="Поделиться"><Share2/></button><button className="top-icon" aria-label="Оформление"><Palette/></button><button className="top-icon" aria-label="Настройки"><Settings/></button></div>
   </header>
   <section className="game-status">
