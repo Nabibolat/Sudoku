@@ -1,4 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "npm:@supabase/supabase-js@2.95.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -29,31 +30,133 @@ function safeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
+function getSupabaseSecretKey(): string | null {
+  const legacy = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (legacy) return legacy;
+  try {
+    const keys = JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS") || "{}");
+    return typeof keys.default === "string" ? keys.default : null;
+  } catch {
+    return null;
+  }
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return response({ error: "Method not allowed" }, 405);
   const botToken = Deno.env.get("TELEGRAM_BOT_TOKEN");
   if (!botToken) return response({ error: "Telegram auth is not configured" }, 503);
+
   try {
     const body = await req.json();
     const initData = typeof body?.initData === "string" ? body.initData : "";
     if (!initData || initData.length > 10_000) return response({ error: "Invalid initData" }, 400);
+
     const params = new URLSearchParams(initData);
     const receivedHash = params.get("hash") || "";
     if (!/^[a-f0-9]{64}$/i.test(receivedHash)) return response({ error: "Invalid Telegram signature" }, 401);
-    const fields = [...params.entries()].filter(([key]) => key !== "hash").sort(([a], [b]) => a.localeCompare(b)).map(([key, value]) => `${key}=${value}`).join("\n");
+    const fields = [...params.entries()]
+      .filter(([key]) => key !== "hash")
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, value]) => `${key}=${value}`)
+      .join("\n");
     const secretKey = await hmacSha256(new TextEncoder().encode("WebAppData"), botToken);
     const calculatedHash = toHex(await hmacSha256(secretKey, fields));
     if (!safeEqual(calculatedHash, receivedHash.toLowerCase())) return response({ error: "Telegram signature verification failed" }, 401);
+
     const authDate = Number(params.get("auth_date"));
     const now = Math.floor(Date.now() / 1000);
-    if (!Number.isInteger(authDate) || authDate > now + 60 || now - authDate > 86_400) return response({ error: "Telegram session expired. Reopen the Mini App." }, 401);
+    if (!Number.isInteger(authDate) || authDate > now + 60 || now - authDate > 86_400) {
+      return response({ error: "Telegram session expired. Reopen the Mini App." }, 401);
+    }
+
     const userRaw = params.get("user");
     if (!userRaw) return response({ error: "Telegram user is missing" }, 401);
     const user = JSON.parse(userRaw);
     if (!Number.isSafeInteger(user?.id) || user.id <= 0) return response({ error: "Invalid Telegram user" }, 401);
-    return response({ ok: true, user: { id: user.id, first_name: typeof user.first_name === "string" ? user.first_name : "", last_name: typeof user.last_name === "string" ? user.last_name : "", username: typeof user.username === "string" ? user.username : null, photo_url: typeof user.photo_url === "string" ? user.photo_url : null, language_code: typeof user.language_code === "string" ? user.language_code : null }, auth_date: authDate });
-  } catch {
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceKey = getSupabaseSecretKey();
+    if (!supabaseUrl || !serviceKey) return response({ error: "Database connection is not configured" }, 503);
+
+    const admin = createClient(supabaseUrl, serviceKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+    const telegramId = String(user.id);
+    const profile = {
+      telegram_id: telegramId,
+      first_name: typeof user.first_name === "string" ? user.first_name : "",
+      last_name: typeof user.last_name === "string" ? user.last_name : null,
+      username: typeof user.username === "string" ? user.username : null,
+      photo_url: typeof user.photo_url === "string" ? user.photo_url : null,
+      language_code: typeof user.language_code === "string" ? user.language_code : null,
+      updated_at: new Date().toISOString(),
+    };
+    const { error: profileError } = await admin.from("player_profiles").upsert(profile, { onConflict: "telegram_id" });
+    if (profileError) {
+      console.error("Player profile upsert failed:", profileError.message);
+      return response({ error: "Could not save player profile" }, 500);
+    }
+
+    const result = body?.result;
+    if (result !== undefined && result !== null) {
+      const validId = typeof result.game_id === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(result.game_id);
+      const validLevel = ["Beginner", "Easy", "Medium", "Hard", "Expert", "Extreme"].includes(result.level);
+      const validDuration = Number.isInteger(result.duration_seconds) && result.duration_seconds >= 0 && result.duration_seconds <= 86_400;
+      const validScore = Number.isInteger(result.score) && result.score >= 0 && result.score <= 10_000_000;
+      const validMistakes = Number.isInteger(result.mistakes) && result.mistakes >= 0 && result.mistakes <= 3;
+      const validDailyDate = result.daily_date === null || result.daily_date === undefined || /^\d{4}-\d{2}-\d{2}$/.test(result.daily_date);
+      if (!validId || !validLevel || typeof result.won !== "boolean" || !validDuration || !validScore || !validMistakes || !validDailyDate) {
+        return response({ error: "Invalid game result" }, 400);
+      }
+      const { error: resultError } = await admin.from("game_results").upsert({
+        id: result.game_id,
+        telegram_id: telegramId,
+        level: result.level,
+        won: result.won,
+        duration_seconds: result.duration_seconds,
+        score: result.score,
+        mistakes: result.mistakes,
+        daily_date: result.daily_date || null,
+      }, { onConflict: "id", ignoreDuplicates: true });
+      if (resultError) {
+        console.error("Game result save failed:", resultError.message);
+        return response({ error: "Could not save game result" }, 500);
+      }
+    }
+
+    const [games, wins, best] = await Promise.all([
+      admin.from("game_results").select("id", { count: "exact", head: true }).eq("telegram_id", telegramId),
+      admin.from("game_results").select("id", { count: "exact", head: true }).eq("telegram_id", telegramId).eq("won", true),
+      admin.from("game_results").select("duration_seconds").eq("telegram_id", telegramId).eq("won", true).order("duration_seconds", { ascending: true }).limit(1).maybeSingle(),
+    ]);
+    if (games.error || wins.error || best.error) {
+      console.error("Player stats query failed:", games.error?.message, wins.error?.message, best.error?.message);
+      return response({ error: "Could not load player statistics" }, 500);
+    }
+    const gamesPlayed = games.count || 0;
+    const winsCount = wins.count || 0;
+    return response({
+      ok: true,
+      user: {
+        id: user.id,
+        first_name: profile.first_name,
+        last_name: profile.last_name,
+        username: profile.username,
+        photo_url: profile.photo_url,
+        language_code: profile.language_code,
+      },
+      stats: {
+        games_played: gamesPlayed,
+        wins: winsCount,
+        losses: gamesPlayed - winsCount,
+        win_rate: gamesPlayed ? Math.round((winsCount / gamesPlayed) * 100) : 0,
+        best_time_seconds: best.data?.duration_seconds ?? null,
+      },
+      auth_date: authDate,
+    });
+  } catch (error) {
+    console.error("Telegram auth error:", error);
     return response({ error: "Invalid request" }, 400);
   }
 });
