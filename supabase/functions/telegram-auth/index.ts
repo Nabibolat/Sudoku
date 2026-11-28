@@ -125,17 +125,60 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    const [games, wins, best] = await Promise.all([
+    const [games, wins, best, history] = await Promise.all([
       admin.from("game_results").select("id", { count: "exact", head: true }).eq("telegram_id", telegramId),
       admin.from("game_results").select("id", { count: "exact", head: true }).eq("telegram_id", telegramId).eq("won", true),
       admin.from("game_results").select("duration_seconds").eq("telegram_id", telegramId).eq("won", true).order("duration_seconds", { ascending: true }).limit(1).maybeSingle(),
+      admin.from("game_results").select("level,won,duration_seconds,mistakes,daily_date,created_at").eq("telegram_id", telegramId).order("created_at", { ascending: false }).limit(500),
     ]);
-    if (games.error || wins.error || best.error) {
-      console.error("Player stats query failed:", games.error?.message, wins.error?.message, best.error?.message);
+    if (games.error || wins.error || best.error || history.error) {
+      console.error("Player stats query failed:", games.error?.message, wins.error?.message, best.error?.message, history.error?.message);
       return response({ error: "Could not load player statistics" }, 500);
     }
+    const rows = history.data || [];
     const gamesPlayed = games.count || 0;
     const winsCount = wins.count || 0;
+    const wonRows = rows.filter((row) => row.won);
+    const wonLevels = new Set(wonRows.map((row) => row.level));
+    const dailyDays = new Set(wonRows.filter((row) => row.daily_date).map((row) => row.daily_date));
+    const cleanWins = wonRows.filter((row) => row.mistakes === 0);
+    let winStreak = 0;
+    for (const row of rows) { if (!row.won) break; winStreak++; }
+    const hardWins = wonRows.filter((row) => row.level === "Hard");
+    const expertWins = wonRows.filter((row) => row.level === "Expert");
+    const extremeWins = wonRows.filter((row) => row.level === "Extreme");
+    const achievements = [
+      ["first_game", "Первый шаг", gamesPlayed >= 1],
+      ["first_win", "Новичок", winsCount >= 1],
+      ["five_wins", "Пять побед", winsCount >= 5],
+      ["ten_wins", "Уверенный игрок", winsCount >= 10],
+      ["twenty_five_wins", "На пути к мастерству", winsCount >= 25],
+      ["fifty_wins", "Полсотни побед", winsCount >= 50],
+      ["hundred_wins", "Легенда Sudoku", winsCount >= 100],
+      ["five_games", "Разминка", gamesPlayed >= 5],
+      ["ten_games", "Постоянство", gamesPlayed >= 10],
+      ["twenty_five_games", "В игре", gamesPlayed >= 25],
+      ["fifty_games", "Ветеран", gamesPlayed >= 50],
+      ["hundred_games", "Не остановить", gamesPlayed >= 100],
+      ["easy_win", "Лёгкая победа", wonLevels.has("Easy")],
+      ["medium_win", "Средний класс", wonLevels.has("Medium")],
+      ["hard_win", "Покоритель сложного", wonLevels.has("Hard")],
+      ["expert_win", "Эксперт", wonLevels.has("Expert")],
+      ["extreme_win", "На пределе", wonLevels.has("Extreme")],
+      ["three_levels", "Разносторонний", wonLevels.size >= 3],
+      ["all_levels", "Мастер логики", ["Beginner","Easy","Medium","Hard","Expert","Extreme"].every((level) => wonLevels.has(level))],
+      ["clean_win", "Без ошибок", cleanWins.length >= 1],
+      ["five_clean_wins", "Точность", cleanWins.length >= 5],
+      ["clean_hard", "Чистая сложность", hardWins.some((row) => row.mistakes === 0)],
+      ["fast_hard", "Быстрый сложный", hardWins.some((row) => row.duration_seconds <= 600)],
+      ["fast_expert", "Быстрый эксперт", expertWins.some((row) => row.duration_seconds <= 900)],
+      ["fast_extreme", "Молниеносный", extremeWins.some((row) => row.duration_seconds <= 1200)],
+      ["daily_first", "Ежедневная привычка", dailyDays.size >= 1],
+      ["daily_seven", "Неделя логики", dailyDays.size >= 7],
+      ["daily_thirty", "Месяц логики", dailyDays.size >= 30],
+      ["win_streak_three", "Триумфальная серия", winStreak >= 3],
+      ["win_streak_five", "Победная серия", winStreak >= 5],
+    ].map(([id, title, unlocked]) => ({ id, title, unlocked: Boolean(unlocked) }));
     return response({
       ok: true,
       user: {
@@ -153,6 +196,7 @@ Deno.serve(async (req: Request) => {
         win_rate: gamesPlayed ? Math.round((winsCount / gamesPlayed) * 100) : 0,
         best_time_seconds: best.data?.duration_seconds ?? null,
       },
+      achievements,
       auth_date: authDate,
     });
   } catch (error) {
